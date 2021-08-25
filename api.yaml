@@ -1,0 +1,146 @@
+openapi: 3.0.3
+info:
+  title: yandex-media
+  description: API for concerts LFG
+  version: 1.0.0
+  contact:
+    name: Mihail Alferov
+    url: https://github.com/mihael-stormrage
+servers:
+  - url: http://localhost:9000
+    description: Dev server
+paths:
+  /queue:
+    post:
+      operationId: createQueue
+      summary: Create LFG queue
+      requestBody:
+        description: JSON containing user queue info
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUserQueue'
+      responses:
+        201:
+          description: Pop in the queue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserQueue'
+        default:
+          description: Error creating queue
+  /queue/{queueId}:
+    get:
+      operationId: getQueueById
+      summary: Get queue info
+      parameters:
+        - in: path
+          name: queueId
+          required: true
+          schema:
+            type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserQueue'
+        default:
+          description: Error retrieving queue by ID
+  /match_users:
+    get:
+      operationId: getUsersFavMatch
+      summary: Get list of users with matching favorite artist
+      parameters:
+        - $ref: '#/components/parameters/offset'
+        - $ref: '#/components/parameters/limit'
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        default:
+          description: Error finding favorites match from users
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        userId:
+          type: integer
+        email:
+          type: string
+        firstName:
+          type: string
+        lastName:
+          type: string
+        gender:
+          $ref: '#/components/schemas/Genders'
+        age:
+          type: integer
+        social:
+          type: string
+        favArtists:
+          type: array
+          items:
+            type: string
+      required:
+        - email
+        - firstName
+        - lastName
+    NewUserQueue:
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          properties:
+            queueId:
+              type: integer
+            description:
+              type: string
+            social:
+              type: string
+            isGang:
+              type: boolean
+            eventId:
+              type: integer
+          required:
+            - userId
+            - gender
+            - age
+            - isGang
+            - eventId
+    UserQueue:
+      allOf:
+        - $ref: '#/components/schemas/NewUserQueue'
+        - type: object
+          required:
+            - queueId
+    Genders:
+      type: string
+      enum:
+        - male
+        - female
+  parameters:
+    offset:
+      in: query
+      name: offset
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: The number of items to skip before starting to collect the result set
+    limit:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        default: 300
+      description: The numbers of items to return
+
